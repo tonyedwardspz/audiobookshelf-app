@@ -11,12 +11,12 @@
         <div style="width: 0; transform: translateX(-50vw); overflow: visible">
           <div style="width: 150vw; overflow: hidden">
             <div id="coverBg" style="filter: blur(5vw)">
-              <covers-book-cover :library-item="libraryItem" :width="coverWidth" :book-cover-aspect-ratio="bookCoverAspectRatio" @imageLoaded="coverImageLoaded" />
+              <covers-book-cover :library-item="libraryItem" :width="200" :book-cover-aspect-ratio="bookCoverAspectRatio" @imageLoaded="coverImageLoaded" />
             </div>
           </div>
         </div>
         <div class="relative" @click="showFullscreenCover = true">
-          <covers-book-cover :library-item="libraryItem" :width="coverWidth" :book-cover-aspect-ratio="bookCoverAspectRatio" no-bg raw @imageLoaded="coverImageLoaded" />
+          <covers-book-cover :library-item="libraryItem" :width="200" :book-cover-aspect-ratio="bookCoverAspectRatio" no-bg raw @imageLoaded="coverImageLoaded" />
           <div v-if="!isPodcast" class="absolute bottom-0 left-0 h-1 shadow-sm z-10" :class="userIsFinished ? 'bg-success' : 'bg-yellow-400'" :style="{ width: coverWidth * progressPercent + 'px' }"></div>
         </div>
       </div>
@@ -27,6 +27,7 @@
         <p v-if="subtitle" class="text-fg text-base">{{ subtitle }}</p>
       </div>
 
+      <!-- 
       <div v-if="hasLocal" class="mx-1">
         <div v-if="isLocalOnly" class="w-full rounded-md bg-warning/10 border border-warning p-4">
           <p class="text-sm">{{ $strings.MessageMediaNotLinkedToServer }}</p>
@@ -40,7 +41,8 @@
         <div v-else-if="currentServerConnectionConfigId && !isLocalMatchingConnectionConfig" class="w-full rounded-md bg-warning/10 border border-warning p-4">
           <p class="text-sm">Media is linked to a different server connection config. Downloaded User Id: {{ localLibraryItem.serverUserId }}. Downloaded Server Address: {{ localLibraryItem.serverAddress }}. Currently connected User Id: {{ user.id }}. Currently connected server address: {{ currentServerAddress }}.</p>
         </div>
-      </div>
+      </div> 
+    -->
 
       <!-- action buttons -->
       <div class="col-span-full">
@@ -75,25 +77,29 @@
 
       <!-- metadata -->
       <div id="metadata" class="grid gap-2 my-2" style>
-        <div v-if="podcastAuthor || (bookAuthors && bookAuthors.length)" class="text-fg-muted uppercase text-sm">{{ $strings.LabelAuthor }}</div>
+        <!--
+        <div v-if="podcastAuthor || (bookAuthors && bookAuthors.length)" class="text-fg-muted text-opacity-60 uppercase text-sm">{{ $strings.LabelAuthor }}</div>
         <div v-if="podcastAuthor" class="text-sm">{{ podcastAuthor }}</div>
         <div v-else-if="bookAuthors && bookAuthors.length" class="text-sm">
           <template v-for="(author, index) in bookAuthors">
             <nuxt-link :key="author.id" :to="`/bookshelf/library?filter=authors.${$encode(author.id)}`" class="underline">{{ author.name }}</nuxt-link>
             <span :key="`${author.id}-comma`" v-if="index < bookAuthors.length - 1">,</span>
           </template>
-        </div>
+        </div> -->
 
+        <!-- 
         <div v-if="podcastType" class="text-fg-muted uppercase text-sm">{{ $strings.LabelType }}</div>
-        <div v-if="podcastType" class="text-sm capitalize">{{ podcastType }}</div>
+        <div v-if="podcastType" class="text-sm capitalize">{{ podcastType }}</div> 
+        -->
 
+        <!--
         <div v-if="series && series.length" class="text-fg-muted uppercase text-sm">{{ $strings.LabelSeries }}</div>
         <div v-if="series && series.length" class="truncate text-sm">
           <template v-for="(series, index) in seriesList">
             <nuxt-link :key="series.id" :to="`/bookshelf/series/${series.id}`" class="underline">{{ series.text }}</nuxt-link>
             <span :key="`${series.id}-comma`" v-if="index < seriesList.length - 1">,</span>
           </template>
-        </div>
+        </div> -->
 
         <div v-if="numTracks" class="text-fg-muted uppercase text-sm">{{ $strings.LabelDuration }}</div>
         <div v-if="numTracks" class="text-sm">{{ $elapsedPretty(duration) }}</div>
@@ -106,16 +112,19 @@
           </template>
         </div>
 
-        <div v-if="genres.length" class="text-fg-muted uppercase text-sm">{{ $strings.LabelGenres }}</div>
+      <!-- 
+      <div v-if="genres.length" class="text-fg-muted uppercase text-sm">{{ $strings.LabelGenres }}</div>
         <div v-if="genres.length" class="truncate text-sm">
           <template v-for="(genre, index) in genres">
             <nuxt-link :key="genre" :to="`/bookshelf/library?filter=genres.${$encode(genre)}`" class="underline">{{ genre }}</nuxt-link>
             <span :key="index" v-if="index < genres.length - 1">,</span>
           </template>
-        </div>
+        </div> -->
 
+        <!-- 
         <div v-if="publishedYear" class="text-fg-muted uppercase text-sm">{{ $strings.LabelPublishYear }}</div>
         <div v-if="publishedYear" class="text-sm">{{ publishedYear }}</div>
+         -->
       </div>
 
       <div v-if="description" class="w-full py-2">
@@ -159,18 +168,37 @@ export default {
   async asyncData({ store, params, redirect, app }) {
     const libraryItemId = params.id
     let libraryItem = null
+    // if (libraryItemId.startsWith('local')) {
+    //   libraryItem = await app.$db.getLocalLibraryItem(libraryItemId)
+    //   console.log('Got lli', libraryItemId)
+    //   // If library item is linked to the currently connected server then redirect to the page using the server library item id
+    //   if (libraryItem?.libraryItemId?.startsWith('li_')) {
+    //     // Detect old library item id
+    //     console.error('Local library item has old server library item id', libraryItem.libraryItemId)
+        
+    //   } else if (libraryItem?.libraryItemId && libraryItem?.serverAddress === store.getters['user/getServerAddress'] && store.state.networkConnected) {
+    //     let query = ''
+    //     if (libraryItem.mediaType === 'podcast') query = '?episodefilter=downloaded' // Filter by downloaded when redirecting from the local copy
+    //     return redirect(`/item/${libraryItem.libraryItemId}${query}`)
+    //   }
+    // } else if (store.state.user.serverConnectionConfig) {
+    //   libraryItem = await app.$nativeHttp.get(`/api/items/${libraryItemId}?expanded=1&include=rssfeed`).catch((error) => {
+    //     console.error('Failed', error)
+    //     return false
+    //   })
+
+    //   if (libraryItem) {
+    //     const localLibraryItem = await app.$db.getLocalLibraryItemByLId(libraryItemId)
+    //     if (localLibraryItem) {
+    //       console.log('Library item has local library item also', localLibraryItem.id)
+    //       libraryItem.localLibraryItem = localLibraryItem
+    //     }
+    //   }
+    // }
+
     if (libraryItemId.startsWith('local')) {
       libraryItem = await app.$db.getLocalLibraryItem(libraryItemId)
       console.log('Got lli', libraryItemId)
-      // If library item is linked to the currently connected server then redirect to the page using the server library item id
-      if (libraryItem?.libraryItemId?.startsWith('li_')) {
-        // Detect old library item id
-        console.error('Local library item has old server library item id', libraryItem.libraryItemId)
-      } else if (libraryItem?.libraryItemId && libraryItem?.serverAddress === store.getters['user/getServerAddress'] && store.state.networkConnected) {
-        let query = ''
-        if (libraryItem.mediaType === 'podcast') query = '?episodefilter=downloaded' // Filter by downloaded when redirecting from the local copy
-        return redirect(`/item/${libraryItem.libraryItemId}${query}`)
-      }
     } else if (store.state.user.serverConnectionConfig) {
       libraryItem = await app.$nativeHttp.get(`/api/items/${libraryItemId}?expanded=1&include=rssfeed`).catch((error) => {
         console.error('Failed', error)
